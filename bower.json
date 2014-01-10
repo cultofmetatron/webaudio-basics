@@ -5,6 +5,7 @@
     "font-awesome": "~3.1.1",
     "bootstrap": "*",
     "jquery": "*",
+    "underscore": "*",
     "backbone": "*",
     "d3" : "~3.0"
   }
