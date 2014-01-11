@@ -7,9 +7,21 @@
     templates[$el.data('name')] = Handlebars.compile($el.html());
   });
 
-
-
-
+  (function() {
+    var modules = {};
+    window.requestModule = function(name) {
+      return modules[name];
+    };
+    window.registerModule = function(name, module) {
+      modules[name] = module;
+      return requestModule('name');
+    };
+    window.deleteModule = function(name) {
+      delete modules[name];
+      return null;
+    };
+  }).call(this);
 
 
 }).call(this);
+
