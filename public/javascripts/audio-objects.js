@@ -38,9 +38,10 @@
     AudioObject.apply(this);
     //load the bugger and then call then
     this.getBuffer(url)
-      .then(_.bind(this.loadAudioData, this));
+      .then(_.bind(this.loadAudioData, this))
+      //.then(_.bind(this.play, this));
 
-    //
+    
 
 
   };
