@@ -2,6 +2,7 @@
 
   var AudioObject = function() {
     this.context = this._createContext();
+    this.modifiers = [];
   };
   AudioObject.prototype = Object.create({});
   _.extend(AudioObject.prototype, Backbone.Events);
@@ -13,7 +14,9 @@
   AudioObject.fn.getContext = function() {
     return this.context;
   };
-
+  AudioObject.fn.addSourceModifier = function(fn) {
+    this.modifiers.push(fn);
+  };
   AudioObject.fn._createContext = function() {
     //create an audio context we can use
     var ContextClass = (window.AudioContext ||
@@ -37,13 +40,10 @@
   AudioFile = function(url) {
     AudioObject.apply(this);
     //load the bugger and then call then
+    this._ready = false;
     this.getBuffer(url)
       .then(_.bind(this.loadAudioData, this))
       .then(_.bind(this.play, this));
-
-    
-
-
   };
   AudioFile.prototype = Object.create(AudioObject.prototype);
   AudioFile.fn = AudioFile.prototype;
@@ -62,10 +62,16 @@
   AudioFile.fn.createSource = function() {
     this.source = this.context.createBufferSource();
     this.source.buffer = this.bufferredAudio;
-    this.source.connect(this.context.destination);
+  };
+  AudioFile.fn.isReady = function() {
+    return this._ready;
   };
   AudioFile.fn.play = function() {
+    if (this.source && this.source.stop()) {
+      this.source.stop();
+    }
     this.createSource();
+    this.source.connect(this.context.destination);
     this.source.start(0);
   };
   AudioFile.fn.loadAudioData = function(buffer) {
@@ -73,6 +79,7 @@
     this.context.decodeAudioData(buffer, _.bind(function(bufferData) {
       this.bufferredAudio = bufferData;
       defer.resolve(this.bufferredAudio);
+      this._ready = true;
       this.trigger('audioDataLoaded', bufferData);
     }, this), function() {});
     return defer.promise;
