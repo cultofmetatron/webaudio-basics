@@ -3,6 +3,7 @@
   var AudioObject = function(context) {
     this.context = context || this._createContext();
     this.modifiers = [];
+    
   };
   AudioObject.prototype = Object.create({});
   _.extend(AudioObject.prototype, Backbone.Events);
@@ -37,13 +38,13 @@
   registerModule('AudioObject', AudioObject);
 
   //audioFile loads in an object from a url and starts playing it
-  AudioFile = function(url) {
-    AudioObject.apply(this);
+  AudioFile = function(url, context) {
+    AudioObject.apply(this, Array.prototype.slice.call(arguments, 1));
     //load the bugger and then call then
     this._ready = false;
     this.getBuffer(url)
-      .then(_.bind(this.loadAudioData, this))
-      .then(_.bind(this.play, this));
+      .then(_.bind(this.loadAudioData, this));
+      //.then(_.bind(this.play, this));
   };
   AudioFile.prototype = Object.create(AudioObject.prototype);
   AudioFile.fn = AudioFile.prototype;
@@ -59,10 +60,10 @@
     request.send(); //make the request
     return defer.promise;
   };
-  AudioFile.fn.createSource = function() {
-    this.source = this.context.createBufferSource();
-    this.source.buffer = this.bufferredAudio;
-    return this.source;
+  AudioFile.fn.createSource = function(context) {
+    var source = (context) ? context.createBufferSource() : this.context.createBufferSource();
+    source.buffer = this.bufferredAudio;
+    return source;
   };
   AudioFile.fn.isReady = function() {
     return this._ready;
@@ -71,9 +72,10 @@
     if (this.source && this.source.stop()) {
       this.source.stop();
     }
-    this.createSource();
+    this.source = this.createSource();
     this.source.connect(this.context.destination);
     this.source.start(0);
+
   };
   AudioFile.fn.loadAudioData = function(buffer) {
     var defer = Promise.defer();

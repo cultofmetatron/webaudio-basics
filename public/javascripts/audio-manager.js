@@ -6,6 +6,8 @@
     options = options || {};
     this.context = options.context || this._createContext();
     this.buffers = {};
+    this.pendingBuffers = {};
+    this.sources = {};
   };
 
   AudioManager.prototype = Object.create({});
@@ -33,18 +35,56 @@
     if (audioObject.isReady()) {
       this.buffers[name] = audioObject;
       defer.resolve(audioObject);
+      this.trigger('loaded', name);
     } else {
+      this.pendingBuffers[name];
       audioObject.on('audioDataLoaded', _.bind(function() {
         this.buffers[name] = audioObject;
+        delete this.pendingBuffers[name];
         defer.resolve(audioObject);
+        this.trigger('loaded', name);
       }, this));
     }
     return defer.promise.bind(this);
   };
-
+  AudioManager.fn.getBuffer = function(name) {
+    var defer = Promise.defer();
+    if (this.buffers[name]) {
+      defer.resolve(this.buffers[name]);
+    } else {
+      if (this.pendingBuffers[name]) {
+        this.listenTo(this.pendingBuffers[name], 'audioDataLoaded', function(bufferData) {
+          defer.resolve(bufferData);
+        });
+      }
+    }
+    return defer.promise.bind(this);
+  };
   AudioManager.fn.playBuffer = function(bufferName, startTime) {
-    
-
+    startTime = startTime || 0;
+    if (this.sources[bufferName] && this.sources[bufferName].stop) {
+      this.sources[bufferName].stop();
+    }
+    //(this.buffers[bufferName])  this.sources[bufferName] = this.buffers[bufferName];
+    var defer = Promise.defer();
+    if (this.buffers[bufferName]) {
+      if (this.sources[bufferName]) {
+        bufferName.stop(0);
+      }
+      this.sources[bufferName] = this.buffers[bufferName].createSource(this.context);
+      defer.resolve(this.sources[bufferName]);
+    } else if (this.pendingBuffers[bufferName]) {
+      var buffer = this.pendingBuffers[bufferName];
+      buffer.on('audioDataLoaded', _.bind(function() {
+        this.sources[bufferName] = buffer.createSource(this.context);
+        defer.resolve(this.sources[bufferName]);
+      }, this));
+    }
+    //we chain the start time part and then return a promise to be called after
+    return defer.promise.bind(this).then(function(source) {
+      source.connect(this.context.destination);
+      source.start(startTime);
+    });
   };
 
 
