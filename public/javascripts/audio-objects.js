@@ -1,7 +1,7 @@
 (function() {
 
-  var AudioObject = function() {
-    this.context = this._createContext();
+  var AudioObject = function(context) {
+    this.context = context || this._createContext();
     this.modifiers = [];
   };
   AudioObject.prototype = Object.create({});
@@ -62,6 +62,7 @@
   AudioFile.fn.createSource = function() {
     this.source = this.context.createBufferSource();
     this.source.buffer = this.bufferredAudio;
+    return this.source;
   };
   AudioFile.fn.isReady = function() {
     return this._ready;
