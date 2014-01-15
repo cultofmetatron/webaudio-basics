@@ -1,6 +1,5 @@
 (function() {
 
-
   var AudioObject = function() {
     this.context = this._createContext();
   };
@@ -17,15 +16,16 @@
 
   AudioObject.fn._createContext = function() {
     //create an audio context we can use
-    var ContextClass = (window.AudioContext || 
-      window.webkitAudioContext || 
-      window.mozAudioContext || 
-      window.oAudioContext || 
+    var ContextClass = (window.AudioContext ||
+      window.webkitAudioContext             ||
+      window.mozAudioContext                ||
+      window.oAudioContext                  ||
       window.msAudioContext);
     if (ContextClass) {
       var context = new ContextClass();
       return context;
     } else {
+
       console.error("sorry, this browser does not support the Webaudio api!");
     }
     return null;
@@ -39,7 +39,7 @@
     //load the bugger and then call then
     this.getBuffer(url)
       .then(_.bind(this.loadAudioData, this))
-      //.then(_.bind(this.play, this));
+      .then(_.bind(this.play, this));
 
     
 
@@ -59,11 +59,14 @@
     request.send(); //make the request
     return defer.promise;
   };
+  AudioFile.fn.createSource = function() {
+    this.source = this.context.createBufferSource();
+    this.source.buffer = this.bufferredAudio;
+    this.source.connect(this.context.destination);
+  };
   AudioFile.fn.play = function() {
-    var source = this.context.createBufferSource();
-    source.buffer = this.bufferredAudio;
-    source.connect(this.context.destination);
-    source.start(0);
+    this.createSource();
+    this.source.start(0);
   };
   AudioFile.fn.loadAudioData = function(buffer) {
     var defer = Promise.defer();
@@ -76,10 +79,6 @@
   };
 
   registerModule('AudioFile', AudioFile);
-
-
-
-
 
 
 }).call(this);
