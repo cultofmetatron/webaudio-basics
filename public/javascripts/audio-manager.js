@@ -62,31 +62,13 @@
   };
   AudioManager.fn.playBuffer = function(bufferName, startTime) {
     startTime = startTime || 0;
-    if (this.sources[bufferName] && this.sources[bufferName].stop) {
-      this.sources[bufferName].stop();
-    }
-    //(this.buffers[bufferName])  this.sources[bufferName] = this.buffers[bufferName];
-    var defer = Promise.defer();
-    if (this.buffers[bufferName]) {
-      if (this.sources[bufferName]) {
-        bufferName.stop(0);
-      }
-      this.sources[bufferName] = this.buffers[bufferName].createSource(this.context);
-      defer.resolve(this.sources[bufferName]);
-    } else if (this.pendingBuffers[bufferName]) {
-      var buffer = this.pendingBuffers[bufferName];
-      buffer.on('audioDataLoaded', _.bind(function() {
-        this.sources[bufferName] = buffer.createSource(this.context);
-        defer.resolve(this.sources[bufferName]);
-      }, this));
-    }
-    //we chain the start time part and then return a promise to be called after
-    return defer.promise.bind(this).then(function(source) {
+       return this.getBuffer(bufferName).then(function(buffer) {
+      this.sources[bufferName] = buffer.createSource(this.context);
+      var source = this.sources[bufferName];
       source.connect(this.context.destination);
       source.start(startTime);
     });
   };
-
 
   registerModule('AudioManager', AudioManager);
 
