@@ -60,11 +60,18 @@
     }
     return defer.promise.bind(this);
   };
+  AudioManager.fn.createSource = function(buffer) {
+      if (this.sources[name]) {
+        sources[name].stop();
+        delete sources[name];
+      }
+      this.sources[name] = buffer.createSource(this.context);
+      var source = this.sources[name];
+      return source;
+  };
   AudioManager.fn.playBuffer = function(bufferName, startTime) {
     startTime = startTime || 0;
-       return this.getBuffer(bufferName).then(function(buffer) {
-      this.sources[bufferName] = buffer.createSource(this.context);
-      var source = this.sources[bufferName];
+    return this.getBuffer(bufferName).then(this.createSource).then(function(source) {
       source.connect(this.context.destination);
       source.start(startTime);
     });
