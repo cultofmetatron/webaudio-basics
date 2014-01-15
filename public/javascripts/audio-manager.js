@@ -37,8 +37,8 @@
       defer.resolve(audioObject);
       this.trigger('loaded', name);
     } else {
-      this.pendingBuffers[name];
-      audioObject.on('audioDataLoaded', _.bind(function() {
+      this.pendingBuffers[name] = audioObject;
+      audioObject.once('audioDataLoaded', _.bind(function() {
         this.buffers[name] = audioObject;
         delete this.pendingBuffers[name];
         defer.resolve(audioObject);
@@ -56,9 +56,9 @@
       });
     } else {
       if (this.pendingBuffers[name]) {
-        this.once(this.pendingBuffers[name], 'audioDataLoaded', function(bufferData) {
+        this.listenTo(this.pendingBuffers[name], 'audioDataLoaded', function(bufferData) {
           return defer.resolve({
-            name: name, 
+            name: name,
             buffer: bufferData
           });
         });

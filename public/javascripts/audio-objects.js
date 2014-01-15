@@ -78,14 +78,12 @@
 
   };
   AudioFile.fn.loadAudioData = function(buffer) {
-    var defer = Promise.defer();
     this.context.decodeAudioData(buffer, _.bind(function(bufferData) {
       this.bufferredAudio = bufferData;
-      defer.resolve(this.bufferredAudio);
       this._ready = true;
-      this.trigger('audioDataLoaded', bufferData);
+      this.trigger('audioDataLoaded', this);
     }, this), function() {});
-    return defer.promise;
+    return this;
   };
 
   registerModule('AudioFile', AudioFile);
